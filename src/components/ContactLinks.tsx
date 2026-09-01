@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Mail, ExternalLink, Phone, ArrowUpRight, Send, CheckCircle, Loader2 } from "lucide-react";
 import type { ContactLink } from "@/lib/data";
 
@@ -35,12 +35,12 @@ const cardColors = {
 };
 
 // ── Animation variants ────────────────────────────────────────────────────────
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 32 },
-  visible: (i = 0) => ({
+  visible: (i: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, ease: "easeOut", delay: i * 0.1 },
+    transition: { duration: 0.55, ease: "easeOut" as const, delay: i * 0.1 },
   }),
 };
 

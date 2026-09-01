@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Briefcase, Calendar, Zap } from "lucide-react";
 import type { Experience } from "@/lib/data";
 
@@ -8,22 +8,22 @@ interface ExperienceTimelineProps {
   experiences: Experience[];
 }
 
-const sectionVariants = {
+const sectionVariants: Variants = {
   hidden: { opacity: 0, y: 40 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-const cardContainerVariants = {
+const cardContainerVariants: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.15 } },
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, y: 32 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
 };
 
-const bulletVariants = {
+const bulletVariants: Variants = {
   hidden: { opacity: 0, x: -12 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };

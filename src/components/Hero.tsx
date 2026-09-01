@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Download, Mail } from "lucide-react";
 
 interface HeroProps {
@@ -10,7 +10,7 @@ interface HeroProps {
 }
 
 export default function Hero({ name, title, headline }: HeroProps) {
-  const container = {
+  const container: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -18,7 +18,7 @@ export default function Hero({ name, title, headline }: HeroProps) {
     },
   };
 
-  const item = {
+  const item: Variants = {
     hidden: { opacity: 0, y: 30 },
     show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   };

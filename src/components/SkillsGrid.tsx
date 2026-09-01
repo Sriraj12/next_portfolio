@@ -1,26 +1,38 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import type { SkillGroup } from "@/lib/data";
 
 const categoryColors: Record<string, { border: string; bg: string; text: string; dot: string }> = {
-  Frontend: {
+  "Front-End": {
     border: "border-indigo-500/30",
     bg: "bg-indigo-500/10",
     text: "text-indigo-300",
     dot: "bg-indigo-500",
   },
-  "Backend & DB": {
+  "Back-End": {
     border: "border-emerald-500/30",
     bg: "bg-emerald-500/10",
     text: "text-emerald-300",
     dot: "bg-emerald-500",
   },
-  "Architecture & Tools": {
+  "Databases": {
+    border: "border-sky-500/30",
+    bg: "bg-sky-500/10",
+    text: "text-sky-300",
+    dot: "bg-sky-500",
+  },
+  "Architecture": {
     border: "border-violet-500/30",
     bg: "bg-violet-500/10",
     text: "text-violet-300",
     dot: "bg-violet-500",
+  },
+  "Testing & Tools": {
+    border: "border-amber-500/30",
+    bg: "bg-amber-500/10",
+    text: "text-amber-300",
+    dot: "bg-amber-500",
   },
 };
 
@@ -29,22 +41,22 @@ interface SkillsGridProps {
 }
 
 export default function SkillsGrid({ groups }: SkillsGridProps) {
-  const sectionVariants = {
+  const sectionVariants: Variants = {
     hidden: { opacity: 0, y: 40 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.12 } },
   };
 
-  const cardVariants = {
+  const cardVariants: Variants = {
     hidden: { opacity: 0, y: 24 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
-  const tagVariants = {
+  const tagVariants: Variants = {
     hidden: { opacity: 0, scale: 0.85 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
   };
