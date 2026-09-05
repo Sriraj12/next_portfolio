@@ -5,6 +5,22 @@ import { Resend } from "resend";
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const trim = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
+// ── P1-6: HTML-escape helper ───────────────────────────────────────────────
+// Prevents user-controlled values from being interpreted as HTML in the email body.
+function escapeHtml(raw: string): string {
+  return raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Preserve newlines in the message by converting them to <br> AFTER escaping.
+function escapeHtmlWithNewlines(raw: string): string {
+  return escapeHtml(raw).replace(/\n/g, "<br/>");
+}
+
 // ── Rate-limit ─────────────────────────────────────────────────────────────
 // Disabled in development so you can test freely without waiting 60 seconds.
 const IS_DEV = process.env.NODE_ENV === "development";
@@ -78,7 +94,13 @@ export async function POST(req: NextRequest) {
   }
 
   // 5 — Send via Resend
+  // P1-6: All user-supplied values are HTML-escaped before interpolation
+  // to prevent HTML injection in the received email.
   const resend = new Resend(apiKey);
+
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeMessage = escapeHtmlWithNewlines(message);
 
   const { error } = await resend.emails.send({
     from: `Portfolio Contact <${fromEmail}>`,
@@ -91,15 +113,15 @@ export async function POST(req: NextRequest) {
         <table style="width:100%;border-collapse:collapse;">
           <tr>
             <td style="padding:8px 0;color:#94a3b8;width:80px;vertical-align:top;">Name</td>
-            <td style="padding:8px 0;font-weight:600;">${name}</td>
+            <td style="padding:8px 0;font-weight:600;">${safeName}</td>
           </tr>
           <tr>
             <td style="padding:8px 0;color:#94a3b8;vertical-align:top;">Email</td>
-            <td style="padding:8px 0;"><a href="mailto:${email}" style="color:#818cf8;">${email}</a></td>
+            <td style="padding:8px 0;"><a href="mailto:${safeEmail}" style="color:#818cf8;">${safeEmail}</a></td>
           </tr>
           <tr>
             <td style="padding:8px 0;color:#94a3b8;vertical-align:top;">Message</td>
-            <td style="padding:8px 0;white-space:pre-wrap;">${message}</td>
+            <td style="padding:8px 0;">${safeMessage}</td>
           </tr>
         </table>
         <hr style="border-color:#1e293b;margin:24px 0;" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, useReducedMotion } from "framer-motion";
 import type { SkillGroup } from "@/lib/data";
 
 const categoryColors: Record<string, { border: string; bg: string; text: string; dot: string }> = {
@@ -36,36 +36,73 @@ const categoryColors: Record<string, { border: string; bg: string; text: string;
   },
 };
 
+// P1-7: Correct fallback key — "Front-End" (not "Frontend" which didn't exist)
+const DEFAULT_COLORS = categoryColors["Front-End"];
+
+// ── Animation variants — defined outside component to avoid re-creation ────────
+const sectionVariants: Variants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12 } },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+};
+
+const tagVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.85 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+};
+
+// P1-1: Reduced-motion variants — no movement, only opacity
+const sectionVariantsReduced: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.3 } },
+};
+
+const containerVariantsReduced: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.05 } },
+};
+
+const cardVariantsReduced: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.2 } },
+};
+
+const tagVariantsReduced: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.15 } },
+};
+
 interface SkillsGridProps {
   groups: SkillGroup[];
 }
 
 export default function SkillsGrid({ groups }: SkillsGridProps) {
-  const sectionVariants: Variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-  };
+  // P1-1: Respect prefers-reduced-motion
+  const prefersReducedMotion = useReducedMotion();
 
-  const containerVariants: Variants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.12 } },
-  };
-
-  const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 24 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-  };
-
-  const tagVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.85 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
-  };
+  const sv = prefersReducedMotion ? sectionVariantsReduced : sectionVariants;
+  const cv = prefersReducedMotion ? containerVariantsReduced : containerVariants;
+  const kv = prefersReducedMotion ? cardVariantsReduced : cardVariants;
+  const tv = prefersReducedMotion ? tagVariantsReduced : tagVariants;
 
   return (
-    <section id="skills" className="relative px-6 py-24 sm:py-32">
+    <section
+      id="skills"
+      className="relative px-6 py-24 sm:py-32"
+      aria-labelledby="skills-heading"
+    >
       {/* Section heading */}
       <motion.div
-        variants={sectionVariants}
+        variants={sv}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
@@ -74,7 +111,8 @@ export default function SkillsGrid({ groups }: SkillsGridProps) {
         <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-indigo-400">
           What I work with
         </p>
-        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        {/* P1-3: id for aria-labelledby */}
+        <h2 id="skills-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Skills &amp; Technologies
         </h2>
         <p className="mt-4 text-slate-400">
@@ -84,19 +122,20 @@ export default function SkillsGrid({ groups }: SkillsGridProps) {
 
       {/* Skill groups */}
       <motion.div
-        variants={containerVariants}
+        variants={cv}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
         className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3"
       >
         {groups.map((group) => {
-          const colors = categoryColors[group.category] ?? categoryColors["Frontend"];
+          // P1-7: Fixed fallback — uses correct "Front-End" key, guaranteed non-undefined
+          const colors = categoryColors[group.category] ?? DEFAULT_COLORS;
           return (
             <motion.div
               key={group.category}
-              variants={cardVariants}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              variants={kv}
+              whileHover={prefersReducedMotion ? undefined : { y: -4, transition: { duration: 0.2 } }}
               className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-sm transition-colors duration-300 hover:border-slate-700"
             >
               {/* Category header */}
@@ -107,13 +146,13 @@ export default function SkillsGrid({ groups }: SkillsGridProps) {
 
               {/* Tags */}
               <motion.div
-                variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+                variants={{ visible: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.06 } } }}
                 className="flex flex-wrap gap-2"
               >
                 {group.skills.map((skill) => (
                   <motion.span
                     key={skill}
-                    variants={tagVariants}
+                    variants={tv}
                     className={`rounded-lg border px-3 py-1 text-xs font-medium transition-colors duration-200 ${colors.border} ${colors.bg} ${colors.text} cursor-default`}
                   >
                     {skill}

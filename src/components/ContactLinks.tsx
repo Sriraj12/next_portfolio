@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, useReducedMotion } from "framer-motion";
 import { Mail, ExternalLink, Phone, ArrowUpRight, Send, CheckCircle, Loader2 } from "lucide-react";
 import type { ContactLink } from "@/lib/data";
 
@@ -34,13 +34,22 @@ const cardColors = {
   },
 };
 
-// ── Animation variants ────────────────────────────────────────────────────────
+// ── Full-motion animation variants ────────────────────────────────────────────
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 32 },
   visible: (i: number = 0) => ({
     opacity: 1,
     y: 0,
     transition: { duration: 0.55, ease: "easeOut" as const, delay: i * 0.1 },
+  }),
+};
+
+// ── P1-1: Reduced-motion variants — opacity only, no movement ─────────────────
+const fadeIn: Variants = {
+  hidden: { opacity: 0 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    transition: { duration: 0.3, delay: i * 0.05 },
   }),
 };
 
@@ -57,6 +66,10 @@ export default function ContactLinks({ links }: ContactLinksProps) {
   const [formState, setFormState] = useState<FormState>("idle");
   const [errors, setErrors] = useState<Partial<typeof form>>({});
   const [serverError, setServerError] = useState<string | null>(null);
+
+  // P1-1: Respect prefers-reduced-motion
+  const prefersReducedMotion = useReducedMotion();
+  const fv = prefersReducedMotion ? fadeIn : fadeUp;
 
   // Client-side validation
   const validate = () => {
@@ -86,7 +99,6 @@ export default function ContactLinks({ links }: ContactLinksProps) {
       const data = await res.json();
 
       if (res.status === 422 && data.errors) {
-        // Server returned field-level validation errors
         setErrors(data.errors);
         setFormState("idle");
         return;
@@ -106,7 +118,12 @@ export default function ContactLinks({ links }: ContactLinksProps) {
   };
 
   return (
-    <section id="contact" className="relative overflow-hidden px-6 py-24 sm:py-32">
+    // P1-3: aria-labelledby pointing to the section h2
+    <section
+      id="contact"
+      className="relative overflow-hidden px-6 py-24 sm:py-32"
+      aria-labelledby="contact-heading"
+    >
       {/* Top hairline */}
       <div
         aria-hidden
@@ -128,7 +145,7 @@ export default function ContactLinks({ links }: ContactLinksProps) {
 
       {/* Section heading */}
       <motion.div
-        variants={fadeUp}
+        variants={fv}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
@@ -137,7 +154,8 @@ export default function ContactLinks({ links }: ContactLinksProps) {
         <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-indigo-400">
           Get in touch
         </p>
-        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        {/* P1-3: id for aria-labelledby */}
+        <h2 id="contact-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Let&apos;s Work Together
         </h2>
         <p className="mt-4 text-slate-400">
@@ -150,7 +168,7 @@ export default function ContactLinks({ links }: ContactLinksProps) {
       <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[1fr_1.4fr]">
         {/* ── Left: contact cards ── */}
         <motion.div
-          variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+          variants={{ visible: { transition: { staggerChildren: prefersReducedMotion ? 0.03 : 0.12 } } }}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
@@ -166,8 +184,8 @@ export default function ContactLinks({ links }: ContactLinksProps) {
                 id={`contact-${link.type}`}
                 target={link.type === "linkedin" ? "_blank" : undefined}
                 rel={link.type === "linkedin" ? "noopener noreferrer" : undefined}
-                variants={fadeUp}
-                whileHover={{ y: -3, transition: { duration: 0.18 } }}
+                variants={fv}
+                whileHover={prefersReducedMotion ? undefined : { y: -3, transition: { duration: 0.18 } }}
                 className={`group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-5 backdrop-blur-sm transition-all duration-300 ${colors.border}`}
               >
                 {/* Icon */}
@@ -200,7 +218,7 @@ export default function ContactLinks({ links }: ContactLinksProps) {
 
           {/* Availability pill */}
           <motion.div
-            variants={fadeUp}
+            variants={fv}
             className="mt-2 flex items-center gap-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3"
           >
             <span className="relative flex h-2.5 w-2.5 shrink-0">
@@ -216,7 +234,7 @@ export default function ContactLinks({ links }: ContactLinksProps) {
 
         {/* ── Right: contact form ── */}
         <motion.div
-          variants={fadeUp}
+          variants={fv}
           custom={0.2}
           initial="hidden"
           whileInView="visible"
@@ -229,9 +247,9 @@ export default function ContactLinks({ links }: ContactLinksProps) {
           {formState === "sent" ? (
             // ── Success state ──
             <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
+              initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: prefersReducedMotion ? 0.2 : 0.4 }}
               className="flex h-full min-h-[320px] flex-col items-center justify-center gap-4 text-center"
             >
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
@@ -256,7 +274,7 @@ export default function ContactLinks({ links }: ContactLinksProps) {
 
               {/* Server error banner */}
               {serverError && (
-                <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+                <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
                   <span className="mt-0.5 h-4 w-4 shrink-0 text-red-400">⚠</span>
                   <p className="text-sm text-red-400">{serverError}</p>
                 </div>
@@ -273,12 +291,15 @@ export default function ContactLinks({ links }: ContactLinksProps) {
                   placeholder="John Doe"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  // P1-5: aria-describedby links input to its error message
+                  aria-describedby={errors.name ? "name-error" : undefined}
+                  aria-invalid={!!errors.name}
                   className={`w-full rounded-xl border bg-slate-800/60 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all duration-200 focus:ring-2 focus:ring-indigo-500/60 ${
                     errors.name ? "border-red-500/60" : "border-slate-700 focus:border-indigo-500/60"
                   }`}
                 />
                 {errors.name && (
-                  <p className="mt-1.5 text-xs text-red-400">{errors.name}</p>
+                  <p id="name-error" role="alert" className="mt-1.5 text-xs text-red-400">{errors.name}</p>
                 )}
               </div>
 
@@ -293,12 +314,15 @@ export default function ContactLinks({ links }: ContactLinksProps) {
                   placeholder="john@example.com"
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  // P1-5: aria-describedby links input to its error message
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                  aria-invalid={!!errors.email}
                   className={`w-full rounded-xl border bg-slate-800/60 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all duration-200 focus:ring-2 focus:ring-indigo-500/60 ${
                     errors.email ? "border-red-500/60" : "border-slate-700 focus:border-indigo-500/60"
                   }`}
                 />
                 {errors.email && (
-                  <p className="mt-1.5 text-xs text-red-400">{errors.email}</p>
+                  <p id="email-error" role="alert" className="mt-1.5 text-xs text-red-400">{errors.email}</p>
                 )}
               </div>
 
@@ -313,12 +337,15 @@ export default function ContactLinks({ links }: ContactLinksProps) {
                   placeholder="Tell me about your project..."
                   value={form.message}
                   onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+                  // P1-5: aria-describedby links textarea to its error message
+                  aria-describedby={errors.message ? "message-error" : undefined}
+                  aria-invalid={!!errors.message}
                   className={`w-full resize-none rounded-xl border bg-slate-800/60 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all duration-200 focus:ring-2 focus:ring-indigo-500/60 ${
                     errors.message ? "border-red-500/60" : "border-slate-700 focus:border-indigo-500/60"
                   }`}
                 />
                 {errors.message && (
-                  <p className="mt-1.5 text-xs text-red-400">{errors.message}</p>
+                  <p id="message-error" role="alert" className="mt-1.5 text-xs text-red-400">{errors.message}</p>
                 )}
               </div>
 
@@ -327,8 +354,8 @@ export default function ContactLinks({ links }: ContactLinksProps) {
                 id="contact-form-submit"
                 type="submit"
                 disabled={formState === "sending"}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all duration-200 hover:bg-indigo-500 hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {formState === "sending" ? (

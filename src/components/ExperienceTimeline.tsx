@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, useReducedMotion } from "framer-motion";
 import { Briefcase, Calendar, Zap } from "lucide-react";
 import type { Experience } from "@/lib/data";
 
@@ -8,6 +8,7 @@ interface ExperienceTimelineProps {
   experiences: Experience[];
 }
 
+// ── Full-motion variants ───────────────────────────────────────────────────────
 const sectionVariants: Variants = {
   hidden: { opacity: 0, y: 40 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
@@ -28,9 +29,43 @@ const bulletVariants: Variants = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
+// ── P1-1: Reduced-motion variants — opacity only, no movement ─────────────────
+const sectionVariantsReduced: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.3 } },
+};
+
+const cardContainerVariantsReduced: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.05 } },
+};
+
+const cardVariantsReduced: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.2 } },
+};
+
+const bulletVariantsReduced: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.15 } },
+};
+
 export default function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
+  // P1-1: Respect prefers-reduced-motion
+  const prefersReducedMotion = useReducedMotion();
+
+  const sv = prefersReducedMotion ? sectionVariantsReduced : sectionVariants;
+  const ccv = prefersReducedMotion ? cardContainerVariantsReduced : cardContainerVariants;
+  const kv = prefersReducedMotion ? cardVariantsReduced : cardVariants;
+  const bv = prefersReducedMotion ? bulletVariantsReduced : bulletVariants;
+
   return (
-    <section id="experience" className="relative px-6 py-24 sm:py-32">
+    // P1-3: aria-labelledby pointing to the section h2
+    <section
+      id="experience"
+      className="relative px-6 py-24 sm:py-32"
+      aria-labelledby="experience-heading"
+    >
       {/* Background radial glow */}
       <div
         aria-hidden
@@ -43,7 +78,7 @@ export default function ExperienceTimeline({ experiences }: ExperienceTimelinePr
 
       {/* Section heading */}
       <motion.div
-        variants={sectionVariants}
+        variants={sv}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
@@ -52,7 +87,10 @@ export default function ExperienceTimeline({ experiences }: ExperienceTimelinePr
         <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-indigo-400">
           Where I&apos;ve worked
         </p>
-        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Experience</h2>
+        {/* P1-3: id for aria-labelledby */}
+        <h2 id="experience-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          Experience
+        </h2>
         <p className="mt-4 text-slate-400">
           A timeline of companies and projects I&apos;ve had the pleasure of building.
         </p>
@@ -66,10 +104,10 @@ export default function ExperienceTimeline({ experiences }: ExperienceTimelinePr
         {experiences.map((exp, expIdx) => (
           <motion.div
             key={`${exp.company}-${expIdx}`}
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
+            whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.15 }}
-            transition={{ duration: 0.5 }}
+            transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 0.5 }}
             className="relative mb-16 pl-16 sm:pl-24"
           >
             {/* Timeline node */}
@@ -91,7 +129,7 @@ export default function ExperienceTimeline({ experiences }: ExperienceTimelinePr
 
             {/* Project cards — vertical stack */}
             <motion.div
-              variants={cardContainerVariants}
+              variants={ccv}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.1 }}
@@ -100,8 +138,12 @@ export default function ExperienceTimeline({ experiences }: ExperienceTimelinePr
               {exp.projects.map((project) => (
                 <motion.div
                   key={project.name}
-                  variants={cardVariants}
-                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                  variants={kv}
+                  whileHover={
+                    prefersReducedMotion
+                      ? undefined
+                      : { x: 4, transition: { duration: 0.2 } }
+                  }
                   className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 transition-colors duration-300 hover:border-indigo-500/40"
                 >
                   {/* Left accent bar */}
@@ -129,13 +171,13 @@ export default function ExperienceTimeline({ experiences }: ExperienceTimelinePr
 
                       {/* Bullet points */}
                       <motion.ul
-                        variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+                        variants={{ visible: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.08 } } }}
                         className="space-y-2 border-t border-slate-800/60 pt-3"
                       >
                         {project.points.map((point, i) => (
                           <motion.li
                             key={i}
-                            variants={bulletVariants}
+                            variants={bv}
                             className="flex items-start gap-2.5"
                           >
                             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500/70" />
@@ -171,13 +213,13 @@ export default function ExperienceTimeline({ experiences }: ExperienceTimelinePr
               ))}
             </motion.div>
 
-            {/* Stat summary strip — if any project has a stat, show achievement bar */}
+            {/* Stat summary strip */}
             {exp.projects.some((p) => p.stat) && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+                whileInView={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.4 }}
+                transition={prefersReducedMotion ? { duration: 0.2 } : { duration: 0.5, delay: 0.4 }}
                 className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-3"
               >
                 <Zap className="h-3.5 w-3.5 shrink-0 text-amber-400" />

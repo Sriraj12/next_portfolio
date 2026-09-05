@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { motion, useScroll, useMotionValueEvent, useReducedMotion } from "framer-motion";
 import { Code2, Menu, X } from "lucide-react";
 
 const navLinks = [
@@ -14,6 +14,9 @@ export default function Navbar() {
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // P1-1: Respect prefers-reduced-motion
+  const prefersReducedMotion = useReducedMotion();
 
   useMotionValueEvent(scrollY, "change", (y) => {
     setScrolled(y > 40);
@@ -28,9 +31,10 @@ export default function Navbar() {
 
   return (
     <motion.header
-      initial={{ y: -80, opacity: 0 }}
+      // P1-1: Skip entrance animation when reduced motion is preferred
+      initial={prefersReducedMotion ? { y: 0, opacity: 1 } : { y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: "easeOut" }}
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         scrolled
           ? "border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md shadow-md shadow-slate-950/40"
@@ -48,8 +52,8 @@ export default function Navbar() {
           SRIRAJ<span className="text-indigo-400">.DEV</span>
         </a>
 
-        {/* Desktop links */}
-        <nav className="hidden items-center gap-1 sm:flex">
+        {/* P1-2: Desktop nav — labelled for screen readers */}
+        <nav className="hidden items-center gap-1 sm:flex" aria-label="Primary navigation">
           {navLinks.map((link) => (
             <a
               key={link.href}
@@ -80,10 +84,15 @@ export default function Navbar() {
         key="mobile-menu"
         initial={false}
         animate={{ height: menuOpen ? "auto" : 0, opacity: menuOpen ? 1 : 0 }}
-        transition={{ duration: 0.25, ease: "easeInOut" }}
+        transition={
+          prefersReducedMotion
+            ? { duration: 0 }
+            : { duration: 0.25, ease: "easeInOut" }
+        }
         className="overflow-hidden border-t border-slate-800/60 bg-slate-950/95 backdrop-blur-md sm:hidden"
       >
-        <nav className="flex flex-col gap-1 px-6 py-4">
+        {/* P1-2: Mobile nav — labelled for screen readers */}
+        <nav className="flex flex-col gap-1 px-6 py-4" aria-label="Mobile navigation">
           {navLinks.map((link) => (
             <a
               key={link.href}

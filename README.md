@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sriraj M — Developer Portfolio
 
-## Getting Started
+Personal portfolio website for Sriraj M, Full Stack Developer.
 
-First, run the development server:
+**Live:** [sriraj.is-a.dev](https://sriraj.is-a.dev)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 (strict) |
+| Styling | Tailwind CSS v4 |
+| Animation | Framer Motion 13 |
+| Icons | Lucide React |
+| Email | Resend |
+| Deployment | Vercel |
+
+---
+
+## Features
+
+- Animated hero section with smooth entrance transitions
+- Skills taxonomy with colour-coded category cards
+- Work experience timeline with project detail cards and key-achievement badges
+- Contact section — direct links (email, LinkedIn, phone) + contact form powered by Resend
+- Accessible: skip navigation, ARIA landmarks, form error associations, reduced-motion support
+- SEO: canonical URL, Open Graph, Twitter Card, `robots.txt`, `sitemap.xml`
+- Fully responsive (320 px → 1440 px+)
+- Dark mode design
+
+---
+
+## Project Structure
+
+```
+src/
+  app/
+    layout.tsx          # Root layout, metadata (title, OG, Twitter, canonical)
+    page.tsx            # Single-page composition
+    globals.css         # Tailwind v4 base + custom CSS
+    robots.ts           # robots.txt via Next.js Metadata API
+    sitemap.ts          # sitemap.xml via Next.js Metadata API
+    api/
+      contact/
+        route.ts        # Resend email handler (server-side only)
+  components/
+    Navbar.tsx          # Sticky, scroll-aware navbar with mobile menu
+    Hero.tsx            # Animated hero section
+    SkillsGrid.tsx      # Skill category cards
+    ExperienceTimeline.tsx  # Work history timeline
+    ContactLinks.tsx    # Contact cards + form
+  lib/
+    data.ts             # All portfolio content (single source of truth)
+public/
+  Sriraj_M_Resume.pdf   # Resume PDF
+  og-image.png          # Open Graph / social preview image (1200×630)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Prerequisites:** Node.js 20+, npm
 
-## Learn More
+```bash
+# Install dependencies
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+# Copy environment variables template
+# (see Environment Variables section below)
+cp .env.local.example .env.local   # if example exists
+# or create .env.local manually
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Start dev server
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create a `.env.local` file in the project root. **Never commit this file.**
+
+```env
+# Resend — https://resend.com/api-keys
+RESEND_API_KEY=re_...your_key_here...
+
+# The email address messages will be sent TO (your inbox)
+CONTACT_TO_EMAIL=your@email.com
+
+# The "From" address shown to recipients
+# Must be a domain verified in Resend, or use onboarding@resend.dev for testing
+CONTACT_FROM_EMAIL=onboarding@resend.dev
+```
+
+> **Note:** Without these variables the contact form returns a 503 and displays an error to the user. The rest of the site works without them.
+
+### Vercel Production Setup
+
+In [Vercel dashboard](https://vercel.com) → Project → **Settings** → **Environment Variables**, add the three variables above for the **Production** environment. Redeploy after adding them.
+
+---
+
+## Build
+
+```bash
+# Type-check + production build
+npm run build
+
+# Lint
+npm run lint
+
+# Start production server locally
+npm run start
+```
+
+---
+
+## Deployment
+
+The project is deployed on **Vercel** via automatic Git integration.
+
+- Every push to `main` triggers a production deployment
+- Custom domain: `sriraj.is-a.dev` (CNAME → `cname.vercel-dns.com`)
+
+---
+
+## Updating Portfolio Content
+
+All portfolio data lives in [`src/lib/data.ts`](src/lib/data.ts).  
+Edit that single file to update hero text, skills, experience, or contact links — no other files need to change.

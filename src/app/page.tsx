@@ -7,7 +7,7 @@ import { hero, skillGroups, experiences, contactLinks } from "@/lib/data";
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen overflow-x-hidden">
+    <main id="main-content" className="relative min-h-screen overflow-x-hidden">
       {/* Sticky navigation */}
       <Navbar />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, useReducedMotion } from "framer-motion";
 import { Download, Mail } from "lucide-react";
 
 interface HeroProps {
@@ -9,19 +9,40 @@ interface HeroProps {
   headline: string;
 }
 
-export default function Hero({ name, title, headline }: HeroProps) {
-  const container: Variants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
-    },
-  };
+// ── Full-motion variants ───────────────────────────────────────────────────────
+const container: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+  },
+};
 
-  const item: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-  };
+const item: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
+// ── P1-1: Reduced-motion variants — opacity only, no movement ─────────────────
+const containerReduced: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06, delayChildren: 0.05 },
+  },
+};
+
+const itemReduced: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.3 } },
+};
+
+export default function Hero({ name, title, headline }: HeroProps) {
+  // P1-1: Respect prefers-reduced-motion
+  const prefersReducedMotion = useReducedMotion();
+
+  const cv = prefersReducedMotion ? containerReduced : container;
+  const iv = prefersReducedMotion ? itemReduced : item;
 
   return (
     <section
@@ -50,13 +71,13 @@ export default function Hero({ name, title, headline }: HeroProps) {
       />
 
       <motion.div
-        variants={container}
+        variants={cv}
         initial="hidden"
         animate="show"
         className="relative z-10 max-w-4xl"
       >
         {/* Badge */}
-        <motion.div variants={item} className="mb-6 flex justify-center">
+        <motion.div variants={iv} className="mb-6 flex justify-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-sm font-medium text-indigo-400 backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75" />
@@ -68,7 +89,7 @@ export default function Hero({ name, title, headline }: HeroProps) {
 
         {/* Name */}
         <motion.h1
-          variants={item}
+          variants={iv}
           className="bg-gradient-to-b from-white via-white to-slate-400 bg-clip-text text-5xl font-black tracking-tight text-transparent sm:text-7xl md:text-8xl"
         >
           {name}
@@ -76,7 +97,7 @@ export default function Hero({ name, title, headline }: HeroProps) {
 
         {/* Title */}
         <motion.p
-          variants={item}
+          variants={iv}
           className="mt-4 text-lg font-semibold tracking-widest text-indigo-400 uppercase sm:text-xl"
         >
           {title}
@@ -84,7 +105,7 @@ export default function Hero({ name, title, headline }: HeroProps) {
 
         {/* Headline */}
         <motion.p
-          variants={item}
+          variants={iv}
           className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg"
         >
           {headline}
@@ -92,7 +113,7 @@ export default function Hero({ name, title, headline }: HeroProps) {
 
         {/* CTA Buttons */}
         <motion.div
-          variants={item}
+          variants={iv}
           className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
           <a
@@ -117,21 +138,24 @@ export default function Hero({ name, title, headline }: HeroProps) {
         </motion.div>
       </motion.div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.4, duration: 0.8 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2"
-      >
-        <div className="flex h-10 w-6 items-start justify-center rounded-full border border-slate-600 p-1.5">
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
-            className="h-2 w-1 rounded-full bg-slate-500"
-          />
-        </div>
-      </motion.div>
+      {/* Scroll indicator — hidden for reduced motion users */}
+      {!prefersReducedMotion && (
+        <motion.div
+          aria-hidden
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4, duration: 0.8 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2"
+        >
+          <div className="flex h-10 w-6 items-start justify-center rounded-full border border-slate-600 p-1.5">
+            <motion.div
+              animate={{ y: [0, 12, 0] }}
+              transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+              className="h-2 w-1 rounded-full bg-slate-500"
+            />
+          </div>
+        </motion.div>
+      )}
     </section>
   );
 }
